@@ -69,6 +69,10 @@ float   omega=0.8;
 
 Matrix  a,b,c,p1,bnd,wrk1,wrk2,p;
 
+#pragma xmp nodes n[1][1][1]
+#pragma xmp template t[32][32][64]
+#pragma xmp distribute t[block][block][block] onto n
+
 int
 main(int argc, char *argv[])
 {
@@ -103,6 +107,7 @@ main(int argc, char *argv[])
 
   target = 60.0;
 
+  #pragma xmp task on t[0][0][0]
   printf("mimax = %d mjmax = %d mkmax = %d\n",mimax,mjmax,mkmax);
   printf("imax = %d jmax = %d kmax =%d\n",imax,jmax,kmax);
 
@@ -138,6 +143,7 @@ main(int argc, char *argv[])
    *    Start measuring
    */
   nn= 3; // 3 итерации алгоритма якоби
+  #pragma xmp task on t[0][0][0]
   printf(" Start rehearsal measurement process.\n");
   printf(" Measure the performance in %d times.\n\n",nn);
 
@@ -152,6 +158,7 @@ main(int argc, char *argv[])
 
   nn= (int)(target/(cpu/3.0));//общее количество итераций которое можно выполнить за минуту
 
+  #pragma xmp task on t[0][0][0]
   printf(" Now, start the actual measurement process.\n");
   printf(" The loop will be excuted in %d times\n",nn);
   printf(" This will take about one minute.\n");
@@ -162,6 +169,7 @@ main(int argc, char *argv[])
   cpu1 = second();
   cpu = cpu1 - cpu0;
 
+  #pragma xmp task on t[0][0][0]
   printf(" Loop executed for %d times\n",nn);// количество итераций
   printf(" Gosa : %e \n",gosa);//результат выполнения якоби
   printf(" MFLOPS measured : %f\tcpu : %f\n",mflops(nn,cpu,flop),cpu);
@@ -262,6 +270,7 @@ mat_set(Matrix* Mat, int l, float val)
 {
     int i,j,k;
   
+    #pragma xmp loop [i][j][k] on t[i][j][k]
     for(i=0; i<Mat->mrows; i++)
         for(j=0; j<Mat->mcols; j++)
             for(k=0; k<Mat->mdeps; k++)
@@ -274,6 +283,7 @@ mat_set_init(Matrix* Mat)
   int  i,j,k,l;
   float tt;
 
+  #pragma xmp loop [i][j][k] on t[i][j][k]
   for(i=0; i<Mat->mrows; i++)
     for(j=0; j<Mat->mcols; j++)
       for(k=0; k<Mat->mdeps; k++)
@@ -291,9 +301,11 @@ jacobi(int nn, Matrix* a,Matrix* b,Matrix* c,
   jmax= p->mcols-1;
   kmax= p->mdeps-1;
 
+  //#pragma xmp align [i][j][k] with t[i][j][k]
+  
   for(n=0 ; n<nn ; n++){
     gosa = 0.0;
-
+    #pragma xmp loop [i][j][k] on t[i][j][k]
     for(i=1 ; i<imax; i++)
       for(j=1 ; j<jmax ; j++)
         for(k=1 ; k<kmax ; k++){
