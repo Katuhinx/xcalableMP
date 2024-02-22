@@ -247,9 +247,7 @@ newMat(Matrix* Mat, int mnums,int mrows, int mcols, int mdeps)
   Mat->mcols= mcols;
   Mat->mdeps= mdeps;
   Mat->m= NULL;
-  Mat->m= (float*)malloc(mnums * mrows * mcols * mdeps * sizeof(float));
-  #pragma dvm redistribute (Mat[block][block][block])  
-  
+  Mat->m= (float*)malloc(mnums * mrows * mcols * mdeps * sizeof(float));  
   return(Mat->m != NULL) ? 1:0;
 }
 
@@ -296,12 +294,14 @@ jacobi(int nn, Matrix* a,Matrix* b,Matrix* c,
 {
   int    i,j,k,n,imax,jmax,kmax;
   float  gosa,s0,ss;
+  //float a_matrix[a->mnums][a->mrows][a->mcols][a->mdeps];
+  //a_matrix = a->m;
 
   imax= p->mrows-1;
   jmax= p->mcols-1;
   kmax= p->mdeps-1;
 
-  //#pragma xmp align [i][j][k] with t[i][j][k]
+  //#pragma xmp align a[*][i][j][k] with t[i][j][k]
   
   for(n=0 ; n<nn ; n++){
     gosa = 0.0;
